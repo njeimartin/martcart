@@ -12,14 +12,16 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .single();
 
   if (!product) notFound();
-  const category = Array.isArray(product.categories) ? product.categories[0]?.name : product.categories?.name;
+
+  const category = (product.categories as { name?: string } | { name?: string }[] | null);
+  const categoryName = Array.isArray(category) ? category[0]?.name : category?.name;
 
   return (
     <main className="product-page">
       <div className="container product-detail">
-        <div className="detail-image">{product.main_image_url ? <img src={product.main_image_url} alt={product.name} /> : <span>{category?.charAt(0) ?? 'M'}</span>}</div>
+        <div className="detail-image">{product.main_image_url ? <img src={product.main_image_url} alt={product.name} /> : <span>{categoryName?.charAt(0) ?? 'M'}</span>}</div>
         <div className="detail-copy">
-          <p className="eyebrow">{category ?? 'MARTCART'}{product.brand ? ` · ${product.brand}` : ''}</p>
+          <p className="eyebrow">{categoryName ?? 'MARTCART'}{product.brand ? ` · ${product.brand}` : ''}</p>
           <h1>{product.name}</h1>
           <div className="price">${Number(product.price).toFixed(2)} <small>{product.currency}</small></div>
           <p className="description">{product.description ?? 'Quality product, selected for the MARTCART collection.'}</p>
