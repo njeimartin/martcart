@@ -1,0 +1,32 @@
+import { createClient } from '@/lib/supabase/client';
+import { notFound } from 'next/navigation';
+
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const supabase = createClient();
+  const { data: product } = await supabase
+    .from('products')
+    .select('id, name, slug, description, price, currency, main_image_url, stock_quantity, brand, rating, review_count, categories(name)')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .single();
+
+  if (!product) notFound();
+  const category = Array.isArray(product.categories) ? product.categories[0]?.name : product.categories?.name;
+
+  return (
+    <main className="product-page">
+      <div className="container product-detail">
+        <div className="detail-image">{product.main_image_url ? <img src={product.main_image_url} alt={product.name} /> : <span>{category?.charAt(0) ?? 'M'}</span>}</div>
+        <div className="detail-copy">
+          <p className="eyebrow">{category ?? 'MARTCART'}{product.brand ? ` · ${product.brand}` : ''}</p>
+          <h1>{product.name}</h1>
+          <div className="price">${Number(product.price).toFixed(2)} <small>{product.currency}</small></div>
+          <p className="description">{product.description ?? 'Quality product, selected for the MARTCART collection.'}</p>
+          <p className="stock">{product.stock_quantity > 0 ? `${product.stock_quantity} available` : 'Currently out of stock'}</p>
+          <button className="button dark" disabled={product.stock_quantity === 0}>Add to cart</button>
+        </div>
+      </div>
+    </main>
+  );
+}
