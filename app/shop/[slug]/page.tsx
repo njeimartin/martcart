@@ -1,9 +1,11 @@
-import { createClient } from '@/lib/supabase/client';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
+
+export const dynamic = 'force-dynamic';
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const supabase = createClient();
+  const supabase = await createServerSupabaseClient();
   const { data: product } = await supabase
     .from('products')
     .select('id, name, slug, description, price, currency, main_image_url, stock_quantity, brand, rating, review_count, categories(name)')
@@ -13,7 +15,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   if (!product) notFound();
 
-  const category = (product.categories as { name?: string } | { name?: string }[] | null);
+  const category = product.categories as { name?: string } | { name?: string }[] | null;
   const categoryName = Array.isArray(category) ? category[0]?.name : category?.name;
 
   return (
