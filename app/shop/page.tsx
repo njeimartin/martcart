@@ -1,8 +1,10 @@
-import { createClient } from '@/lib/supabase/client';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import ProductGrid from '@/components/ProductGrid';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ShopPage() {
-  const supabase = createClient();
+  const supabase = await createServerSupabaseClient();
   const { data: products, error } = await supabase
     .from('products')
     .select('id, name, slug, price, currency, main_image_url, stock_quantity, categories(name)')
