@@ -8,13 +8,16 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
-    "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "stripe": "latest"
+    "@supabase/ssr": "0.12.4",
+    "@supabase/supabase-js": "2.112.3",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "stripe": "22.3.2"
   },
   "devDependencies": {
     "@types/node": "latest",
