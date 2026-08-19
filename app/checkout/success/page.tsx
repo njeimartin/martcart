@@ -1,6 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect } from "react";
+
+const CART_KEY = "martcart-cart";
 
 export default function CheckoutSuccessPage() {
+  useEffect(() => {
+    localStorage.removeItem(CART_KEY);
+    window.dispatchEvent(new Event("martcart-cart-updated"));
+  }, []);
+
   return (
     <main className="checkout-page">
       <div className="container checkout-wrap">
