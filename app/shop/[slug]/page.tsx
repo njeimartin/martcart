@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
+import AddToCartButton from '@/components/AddToCartButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +29,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="price">${Number(product.price).toFixed(2)} <small>{product.currency}</small></div>
           <p className="description">{product.description ?? 'Quality product, selected for the MARTCART collection.'}</p>
           <p className="stock">{product.stock_quantity > 0 ? `${product.stock_quantity} available` : 'Currently out of stock'}</p>
-          <button className="button dark" disabled={product.stock_quantity === 0}>Add to cart</button>
+          <AddToCartButton productId={product.id} name={product.name} slug={product.slug} price={Number(product.price)} currency={product.currency} imageUrl={product.main_image_url} stockQuantity={product.stock_quantity} />
         </div>
       </div>
     </main>
