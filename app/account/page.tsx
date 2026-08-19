@@ -1,24 +1,15 @@
-"use client";
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+export const dynamic = 'force-dynamic';
 
-export default function AccountPage() {
-  const [email, setEmail] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+export default async function AccountPage() {
+  const supabase = await createServerSupabaseClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/auth');
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => { setEmail(data.user?.email ?? null); setLoading(false); });
-  }, []);
+  const { data: profile } = await supabase.from('profiles').select('full_name, email, role').eq('id', user.id).maybeSingle();
+  const { data: orders } = await supabase.from('orders').select('id, status, total_amount, currency, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10);
 
-  async function signOut() {
-    await createClient().auth.signOut();
-    window.location.href = "/";
-  }
-
-  if (loading) return <main className="auth-page"><div className="auth-card"><p>Loading account…</p></div></main>;
-  if (!email) return <main className="auth-page"><div className="auth-card"><h1>Please sign in.</h1><a className="button dark" href="/auth">Go to sign in</a></div></main>;
-
-  return <main className="account-page"><div className="container account-card"><p className="eyebrow">MY ACCOUNT</p><h1>Welcome back.</h1><p>{email}</p><div className="account-links"><a href="/shop">Continue shopping →</a><a href="/cart">View cart →</a></div><button className="button dark" onClick={signOut}>Sign out</button></div></main>;
+  return <main className="account-page"><div className="container account-card"><div className="account-header"><div><p className="eyebrow">MY ACCOUNT</p><h1>Welcome{profile?.full_name ? `, ${profile.full_name}` : ' back'}.</h1><p>{profile?.email ?? user.email}</p></div><a className="button dark" href="/shop">Continue shopping</a></div><section className="account-panel"><div className="panel-heading"><h2>Recent orders</h2></div>{orders?.length ? <div className="account-orders">{orders.map((order) => <div className="account-order" key={order.id}><div><strong>Order #{String(order.id).slice(0, 8)}</strong><small>{new Date(order.created_at).toLocaleDateString()}</small></div><span>{order.status}</span><strong>${Number(order.total_amount ?? 0).toFixed(2)} {order.currency ?? 'USD'}</strong></div>)}</div> : <div className="empty-products"><h3>No orders yet</h3><p>Your completed orders will appear here.</p><a className="button dark" href="/shop">Start shopping</a></div>}</section><div className="account-links"><a href="/wishlist">❤️ Wishlist</a><a href="/cart">🛒 View cart</a></div></div></main>;
 }
