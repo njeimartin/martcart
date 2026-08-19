@@ -24,6 +24,13 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           items,
           customerEmail: String(form.get("email") || ""),
+          shipping: {
+            name: String(form.get("name") || ""),
+            phone: String(form.get("phone") || ""),
+            address: String(form.get("address") || ""),
+            city: String(form.get("city") || ""),
+            country: String(form.get("country") || ""),
+          },
         }),
       });
 
