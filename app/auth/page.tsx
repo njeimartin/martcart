@@ -15,19 +15,25 @@ export default function AuthPage() {
     event.preventDefault();
     setLoading(true);
     setMessage("");
-    const supabase = createClient();
 
-    if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setMessage(error.message);
-      else window.location.href = "/account";
-    } else {
-      const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
-      if (error) setMessage(error.message);
-      else if (data.session) window.location.href = "/account";
-      else setMessage("Account created. Check your email to confirm your account.");
+    try {
+      const supabase = createClient();
+
+      if (mode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) setMessage(error.message);
+        else window.location.href = "/account";
+      } else {
+        const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName } } });
+        if (error) setMessage(error.message);
+        else if (data.session) window.location.href = "/account";
+        else setMessage("Account created. Check your email to confirm your account.");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Unable to complete authentication.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -42,8 +48,8 @@ export default function AuthPage() {
           <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
           <button className="button dark" disabled={loading}>{loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</button>
         </form>
-        {message && <p className="form-message">{message}</p>}
-        <button className="switch-auth" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setMessage(""); }}>
+        {message && <p className="form-message" role="alert">{message}</p>}
+        <button type="button" className="switch-auth" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setMessage(""); }}>
           {mode === "login" ? "New to MARTCART? Create an account" : "Already have an account? Sign in"}
         </button>
       </div>
