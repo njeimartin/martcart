@@ -30,7 +30,6 @@ export async function POST(request: Request) {
     if (!items.length) throw new Error("Stripe session has no order items.");
 
     const subtotal = items.reduce((sum, item) => sum + Number(item.line_total), 0);
-    const shippingDetails = session.shipping_details;
     const metadata = session.metadata || {};
     const userId = metadata.user_id || null;
 
@@ -45,11 +44,11 @@ export async function POST(request: Request) {
       payment_status: "paid",
       payment_provider: "stripe",
       payment_reference: paymentReference,
-      shipping_name: metadata.shipping_name || shippingDetails?.name || null,
+      shipping_name: metadata.shipping_name || session.customer_details?.name || null,
       shipping_phone: metadata.shipping_phone || session.customer_details?.phone || null,
-      shipping_address: metadata.shipping_address || shippingDetails?.address?.line1 || null,
-      shipping_city: metadata.shipping_city || shippingDetails?.address?.city || null,
-      shipping_country: metadata.shipping_country || shippingDetails?.address?.country || null,
+      shipping_address: metadata.shipping_address || session.customer_details?.address?.line1 || null,
+      shipping_city: metadata.shipping_city || session.customer_details?.address?.city || null,
+      shipping_country: metadata.shipping_country || session.customer_details?.address?.country || null,
     }).select("id").single();
 
     if (orderError) throw orderError;
