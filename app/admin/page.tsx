@@ -23,10 +23,9 @@ export default function AdminPage() {
   const [categoryId, setCategoryId] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
-  const supabase = createClient();
-
   async function loadDashboard() {
     setLoading(true);
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setLoading(false); return; }
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
@@ -54,6 +53,7 @@ export default function AdminPage() {
   async function saveProduct(event: React.FormEvent) {
     event.preventDefault(); setSaving(true); setStatus('');
     try {
+      const supabase = createClient();
       if (!name.trim() || !Number.isFinite(Number(price)) || Number(price) <= 0) throw new Error('Enter a valid product name and USD price.');
       let imageUrl: string | undefined;
       const { data: { user } } = await supabase.auth.getUser();
@@ -84,12 +84,14 @@ export default function AdminPage() {
 
   async function deleteProduct(id: string) {
     if (!confirm('Delete this product?')) return;
+    const supabase = createClient();
     const { error } = await supabase.from('products').delete().eq('id', id);
     setStatus(error ? error.message : 'Product deleted.');
     if (!error) await loadDashboard();
   }
 
   async function changeOrderStatus(id: string, statusValue: string) {
+    const supabase = createClient();
     const { error } = await supabase.from('orders').update({ status: statusValue }).eq('id', id);
     setStatus(error ? error.message : 'Order status updated.');
     if (!error) await loadDashboard();
