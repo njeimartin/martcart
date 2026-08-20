@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     if (!items.length) throw new Error("Stripe session has no order items.");
 
     const subtotal = items.reduce((sum, item) => sum + Number(item.line_total), 0);
-    const shippingDetails = session.shipping_details;
+    const shippingDetails = session.collected_information?.shipping_details;
     const metadata = session.metadata || {};
     const userId = metadata.user_id || null;
 
