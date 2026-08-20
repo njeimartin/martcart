@@ -7,7 +7,7 @@ export default async function ShopPage() {
   const supabase = await createServerSupabaseClient();
   const { data: products, error } = await supabase
     .from('products')
-    .select('id, name, slug, price, currency, main_image_url, stock_quantity, categories(name)')
+    .select('id, name, slug, price, currency, main_image_url, stock_quantity')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
@@ -21,7 +21,12 @@ export default async function ShopPage() {
       {error ? (
         <div className="container empty-products"><h2>Products are temporarily unavailable.</h2><p>Please check the Supabase connection and try again.</p></div>
       ) : (
-        <ProductGrid products={products ?? []} />
+        <ProductGrid
+  products={(products ?? []).map((product) => ({
+    ...product,
+    categories: null,
+  }))}
+/>
       )}
     </main>
   );
