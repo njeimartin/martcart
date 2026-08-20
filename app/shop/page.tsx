@@ -1,32 +1,48 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
-import ProductGrid from '@/components/ProductGrid';
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import ProductGrid from "@/components/ProductGrid";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function ShopPage() {
   const supabase = await createServerSupabaseClient();
+
   const { data: products, error } = await supabase
-    .from('products')
-    .select('id, name, slug, price, currency, main_image_url, stock_quantity')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
+    .from("products")
+    .select(
+      "id, name, slug, price, currency, main_image_url, stock_quantity"
+    )
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
+
+  const gridProducts = (products ?? []).map((product) => ({
+    ...product,
+    categories: null,
+  }));
 
   return (
     <main className="shop-page">
       <div className="container shop-header">
         <p className="eyebrow">MARTCART SHOP</p>
+
         <h1>Discover your next favorite.</h1>
-        <p>Browse our curated collection. All prices are displayed in USD.</p>
+
+        <p>
+          Browse our curated collection. All prices are displayed in USD.
+        </p>
       </div>
+
       {error ? (
-        <div className="container empty-products"><h2>Products are temporarily unavailable.</h2><p>Please check the Supabase connection and try again.</p></div>
+        <div className="container empty-products">
+          <h2>Products are temporarily unavailable.</h2>
+          <p>Please check the Supabase connection and try again.</p>
+        </div>
+      ) : gridProducts.length === 0 ? (
+        <div className="container empty-products">
+          <h2>No products available yet.</h2>
+          <p>Please check back soon.</p>
+        </div>
       ) : (
-        <ProductGrid
-  products={(products ?? []).map((product) => ({
-    ...product,
-    categories: null,
-  }))}
-/>
+        <ProductGrid products={gridProducts} />
       )}
     </main>
   );
