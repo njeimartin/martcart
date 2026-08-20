@@ -23,19 +23,27 @@ export default function AdminPage() {
   const [categoryId, setCategoryId] = useState('');
   const [file, setFile] = useState<File | null>(null);
 
-  const supabase = createClient();
+  // Create the browser client lazily. AdminPage is prerendered by Next.js,
+  // so reading the client-side Supabase environment at component render time
+  // can fail during the production build.
+  let supabase: ReturnType<typeof createClient> | null = null;
+  const getSupabase = () => {
+    if (!supabase) supabase = createClient();
+    return supabase;
+  };
 
   async function loadDashboard() {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    const client = getSupabase();
+    const { data: { user } } = await client.auth.getUser();
     if (!user) { setLoading(false); return; }
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    const { data: profile } = await client.from('profiles').select('role').eq('id', user.id).single();
     if (profile?.role !== 'admin') { setLoading(false); return; }
     setAuthorized(true);
     const [productsResult, categoriesResult, ordersResult] = await Promise.all([
-      supabase.from('products').select('id,name,price,stock_quantity,main_image_url,is_active,category_id').order('created_at', { ascending: false }),
-      supabase.from('categories').select('id,name').order('name'),
-      supabase.from('orders').select('id,status,total,created_at').order('created_at', { ascending: false }).limit(100),
+      client.from('products').select('id,name,price,stock_quantity,main_image_url,is_active,category_id').order('created_at', { ascending: false }),
+      client.from('categories').select('id,name').order('name'),
+      client.from('orders').select('id,status,total,created_at').order('created_at', { ascending: false }).limit(100),
     ]);
     setProducts(productsResult.data ?? []);
     setCategories(categoriesResult.data ?? []);
@@ -53,27 +61,28 @@ export default function AdminPage() {
 
   async function saveProduct(event: React.FormEvent) {
     event.preventDefault(); setSaving(true); setStatus('');
+    const client = getSupabase();
     try {
       if (!name.trim() || !Number.isFinite(Number(price)) || Number(price) <= 0) throw new Error('Enter a valid product name and USD price.');
       let imageUrl: string | undefined;
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await client.auth.getUser();
       if (!user) throw new Error('Please sign in.');
       if (file) {
         const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const upload = await supabase.storage.from('product-images').upload(path, file, { upsert: false, contentType: file.type });
+        const upload = await client.storage.from('product-images').upload(path, file, { upsert: false, contentType: file.type });
         if (upload.error) throw upload.error;
-        imageUrl = supabase.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+        imageUrl = client.storage.from('product-images').getPublicUrl(path).data.publicUrl;
       }
       if (editingId) {
         const update: Record<string, unknown> = { name: name.trim(), price: Number(price), stock_quantity: Math.max(0, Number(stock) || 0), category_id: categoryId || null };
         if (imageUrl) update.main_image_url = imageUrl;
-        const { error } = await supabase.from('products').update(update).eq('id', editingId);
+        const { error } = await client.from('products').update(update).eq('id', editingId);
         if (error) throw error;
         setStatus('Product updated successfully.');
       } else {
         const slug = `${name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${Date.now()}`;
-        const { error } = await supabase.from('products').insert({ name: name.trim(), slug, description: description.trim() || null, price: Number(price), currency: 'USD', stock_quantity: Math.max(0, Number(stock) || 0), category_id: categoryId || null, main_image_url: imageUrl ?? null, is_active: true });
+        const { error } = await client.from('products').insert({ name: name.trim(), slug, description: description.trim() || null, price: Number(price), currency: 'USD', stock_quantity: Math.max(0, Number(stock) || 0), category_id: categoryId || null, main_image_url: imageUrl ?? null, is_active: true });
         if (error) throw error;
         setStatus('Product added successfully.');
       }
@@ -84,13 +93,13 @@ export default function AdminPage() {
 
   async function deleteProduct(id: string) {
     if (!confirm('Delete this product?')) return;
-    const { error } = await supabase.from('products').delete().eq('id', id);
+    const { error } = await getSupabase().from('products').delete().eq('id', id);
     setStatus(error ? error.message : 'Product deleted.');
     if (!error) await loadDashboard();
   }
 
   async function changeOrderStatus(id: string, statusValue: string) {
-    const { error } = await supabase.from('orders').update({ status: statusValue }).eq('id', id);
+    const { error } = await getSupabase().from('orders').update({ status: statusValue }).eq('id', id);
     setStatus(error ? error.message : 'Order status updated.');
     if (!error) await loadDashboard();
   }
