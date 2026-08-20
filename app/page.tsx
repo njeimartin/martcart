@@ -1,3 +1,8 @@
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import ProductGrid from '@/components/ProductGrid';
+
+export const dynamic = 'force-dynamic';
+
 const categories = [
   ["Electronics", "Smartphones, audio & computers"],
   ["Fashion", "Clothing, sneakers & accessories"],
@@ -7,7 +12,31 @@ const categories = [
   ["Travel", "Bags & travel accessories"],
 ];
 
-export default function HomePage() {
+async function getFeaturedProducts() {
+  try {
+    const supabase = await createServerSupabaseClient();
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name, slug, price, currency, main_image_url, stock_quantity, categories(name)')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    if (error) {
+      console.error('MARTCART featured products error:', error.message);
+      return [];
+    }
+
+    return data ?? [];
+  } catch (error) {
+    console.error('MARTCART featured products configuration error:', error);
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const featuredProducts = await getFeaturedProducts();
+
   return (
     <main>
       <header className="topbar">
@@ -48,8 +77,16 @@ export default function HomePage() {
 
       <section id="shop" className="section featured">
         <div className="container">
-          <div className="section-heading"><div><p className="eyebrow">FEATURED</p><h2>Popular picks</h2></div><a href="#shop">View shop →</a></div>
-          <div className="empty-products"><h3>Products are coming next</h3><p>The storefront is connected to our MARTCART architecture. We'll load real products from Supabase in the next build stage.</p></div>
+          <div className="section-heading"><div><p className="eyebrow">FEATURED</p><h2>Popular picks</h2></div><a href="/shop">View shop →</a></div>
+          {featuredProducts.length > 0 ? (
+            <ProductGrid products={featuredProducts} />
+          ) : (
+            <div className="empty-products">
+              <h3>Products are coming next</h3>
+              <p>Add active products in Supabase and they will appear here automatically.</p>
+              <a className="button secondary" href="/shop">Browse the shop</a>
+            </div>
+          )}
         </div>
       </section>
 
