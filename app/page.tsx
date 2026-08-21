@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from '@/lib/supabase/admin';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import ProductGrid from '@/components/ProductGrid';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ const categories = [
 
 async function getFeaturedProducts() {
   try {
-    const supabase = createAdminSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase
       .from('products')
       .select('id, name, slug, price, currency, main_image_url, stock_quantity, categories(name)')
@@ -41,16 +41,15 @@ export default async function HomePage() {
     <main>
       <header className="topbar">
         <div className="container nav">
-          <a className="logo" href="#">MART<span>CART</span></a>
+          <a className="logo" href="/">MART<span>CART</span></a>
           <nav>
             <a href="#shop">Shop</a>
             <a href="#categories">Categories</a>
             <a href="#deals">Deals</a>
           </nav>
           <div className="actions">
-            <button aria-label="Search">⌕</button>
-            <button aria-label="Account">Account</button>
-            <button aria-label="Shopping cart">Cart (0)</button>
+            <a href="/auth" aria-label="Account">Account</a>
+            <a href="/cart" aria-label="Shopping cart">Cart</a>
           </div>
         </div>
       </header>
@@ -69,9 +68,9 @@ export default async function HomePage() {
       </section>
 
       <section id="categories" className="section container">
-        <div className="section-heading"><div><p className="eyebrow">SHOP BY CATEGORY</p><h2>Everything in one place</h2></div><a href="#shop">View all →</a></div>
+        <div className="section-heading"><div><p className="eyebrow">SHOP BY CATEGORY</p><h2>Everything in one place</h2></div><a href="/shop">View all →</a></div>
         <div className="category-grid">
-          {categories.map(([name, description]) => <a className="category-card" href="#shop" key={name}><div className="category-icon">{name.charAt(0)}</div><h3>{name}</h3><p>{description}</p><span>Explore →</span></a>)}
+          {categories.map(([name, description]) => <a className="category-card" href="/shop" key={name}><div className="category-icon">{name.charAt(0)}</div><h3>{name}</h3><p>{description}</p><span>Explore →</span></a>)}
         </div>
       </section>
 
@@ -82,8 +81,8 @@ export default async function HomePage() {
             <ProductGrid products={featuredProducts} />
           ) : (
             <div className="empty-products">
-              <h3>Products are coming next</h3>
-              <p>Add active products in Supabase and they will appear here automatically.</p>
+              <h3>No featured products yet</h3>
+              <p>Add active products in the MARTCART admin dashboard and they will appear here automatically.</p>
               <a className="button secondary" href="/shop">Browse the shop</a>
             </div>
           )}
@@ -92,7 +91,7 @@ export default async function HomePage() {
 
       <section id="deals" className="promo"><div className="container promo-inner"><div><p className="eyebrow">MARTCART PROMISE</p><h2>Better shopping starts here.</h2></div><p>Simple discovery, secure checkout, and an experience designed for mobile and web.</p></div></section>
 
-      <footer><div className="container footer-inner"><a className="logo" href="#">MART<span>CART</span></a><p>© 2026 MARTCART. Shop Smart. Live Better.</p></div></footer>
+      <footer><div className="container footer-inner"><a className="logo" href="/">MART<span>CART</span></a><p>© 2026 MARTCART. Shop Smart. Live Better.</p></div></footer>
     </main>
   );
 }
