@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminSupabaseClient } from '@/lib/supabase/admin';
 import ProductGrid from '@/components/ProductGrid';
 
 export const dynamic = 'force-dynamic';
@@ -14,7 +14,7 @@ const categories = [
 
 async function getFeaturedProducts() {
   try {
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminSupabaseClient();
     const { data, error } = await supabase
       .from('products')
       .select('id, name, slug, price, currency, main_image_url, stock_quantity, categories(name)')
