@@ -3,6 +3,11 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
+// The admin dashboard depends on authenticated Supabase state and must never be
+// statically prerendered during the Vercel build.
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 type Product = { id: string; name: string; price: number; stock_quantity: number; main_image_url: string | null; is_active: boolean; category_id: string | null };
 type Category = { id: string; name: string };
 type Order = { id: string; status: string; total: number; created_at: string };
@@ -25,21 +30,26 @@ export default function AdminPage() {
 
   async function loadDashboard() {
     setLoading(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile?.role !== 'admin') { setLoading(false); return; }
-    setAuthorized(true);
-    const [productsResult, categoriesResult, ordersResult] = await Promise.all([
-      supabase.from('products').select('id,name,price,stock_quantity,main_image_url,is_active,category_id').order('created_at', { ascending: false }),
-      supabase.from('categories').select('id,name').order('name'),
-      supabase.from('orders').select('id,status,total,created_at').order('created_at', { ascending: false }).limit(100),
-    ]);
-    setProducts(productsResult.data ?? []);
-    setCategories(categoriesResult.data ?? []);
-    setOrders(ordersResult.data ?? []);
-    setLoading(false);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+      if (profile?.role !== 'admin') return;
+      setAuthorized(true);
+      const [productsResult, categoriesResult, ordersResult] = await Promise.all([
+        supabase.from('products').select('id,name,price,stock_quantity,main_image_url,is_active,category_id').order('created_at', { ascending: false }),
+        supabase.from('categories').select('id,name').order('name'),
+        supabase.from('orders').select('id,status,total,created_at').order('created_at', { ascending: false }).limit(100),
+      ]);
+      setProducts(productsResult.data ?? []);
+      setCategories(categoriesResult.data ?? []);
+      setOrders(ordersResult.data ?? []);
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Unable to load the admin dashboard.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadDashboard(); }, []);
@@ -84,21 +94,25 @@ export default function AdminPage() {
 
   async function deleteProduct(id: string) {
     if (!confirm('Delete this product?')) return;
-    const supabase = createClient();
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    setStatus(error ? error.message : 'Product deleted.');
-    if (!error) await loadDashboard();
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      setStatus(error ? error.message : 'Product deleted.');
+      if (!error) await loadDashboard();
+    } catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to delete product.'); }
   }
 
   async function changeOrderStatus(id: string, statusValue: string) {
-    const supabase = createClient();
-    const { error } = await supabase.from('orders').update({ status: statusValue }).eq('id', id);
-    setStatus(error ? error.message : 'Order status updated.');
-    if (!error) await loadDashboard();
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from('orders').update({ status: statusValue }).eq('id', id);
+      setStatus(error ? error.message : 'Order status updated.');
+      if (!error) await loadDashboard();
+    } catch (error) { setStatus(error instanceof Error ? error.message : 'Unable to update order status.'); }
   }
 
   if (loading) return <main className="admin-page"><div className="container admin-card"><h1>Loading MARTCART Admin...</h1></div></main>;
-  if (!authorized) return <main className="admin-page"><div className="container admin-card"><p className="eyebrow">MARTCART ADMIN</p><h1>Admin access required.</h1><p className="admin-note">Sign in with an account whose profile role is set to admin.</p><a className="button dark" href="/auth">Go to sign in</a></div></main>;
+  if (!authorized) return <main className="admin-page"><div className="container admin-card"><p className="eyebrow">MARTCART ADMIN</p><h1>Admin access required.</h1><p className="admin-note">Sign in with an account whose profile role is set to admin.</p><a className="button dark" href="/auth">Go to sign in</a>{status && <p className="admin-status" role="alert">{status}</p>}</div></main>;
 
   const revenue = orders.filter(o => ['paid','processing','shipped','delivered'].includes(o.status)).reduce((sum, o) => sum + Number(o.total || 0), 0);
   const lowStock = products.filter(p => p.stock_quantity <= 5).length;
@@ -106,13 +120,10 @@ export default function AdminPage() {
   return <main className="admin-page"><div className="container">
     <div className="admin-header"><div><p className="eyebrow">MARTCART ADMIN</p><h1>Store dashboard</h1><p className="admin-note">Manage your catalog, inventory and orders.</p></div><a className="button dark" href="/shop">View store</a></div>
     <div className="admin-stats"><div><span>Products</span><strong>{products.length}</strong></div><div><span>Orders</span><strong>{orders.length}</strong></div><div><span>Revenue</span><strong>${revenue.toFixed(2)}</strong></div><div><span>Low stock</span><strong>{lowStock}</strong></div></div>
-
-    <section className="admin-panel"><div className="panel-heading"><div><p className="eyebrow">CATALOG</p><h2>{editingId ? 'Edit product' : 'Add product'}</h2></div>{editingId && <button className="button light" onClick={resetForm}>Cancel</button>}</div>
-      <form onSubmit={saveProduct} className="admin-form"><label>Product name<input value={name} onChange={e => setName(e.target.value)} required /></label><div className="form-row"><label>Price (USD)<input type="number" min="0.01" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required /></label><label>Stock<input type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} /></label></div><label>Category<select value={categoryId} onChange={e => setCategoryId(e.target.value)}><option value="">No category</option>{categories.map(c => <option value={c.id} key={c.id}>{c.name}</option>)}</select></label><label>Description<textarea value={description} onChange={e => setDescription(e.target.value)} /></label><label>Product image<input id="product-image" type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} /></label><button className="button dark" disabled={saving}>{saving ? 'Saving...' : editingId ? 'Update product' : 'Add product'}</button>{status && <p className="admin-status">{status}</p>}</form>
+    <section className="admin-panel"><div className="panel-heading"><div><p className="eyebrow">CATALOG</p><h2>{editingId ? 'Edit product' : 'Add product'}</h2></div>{editingId && <button type="button" className="button light" onClick={resetForm}>Cancel</button>}</div>
+      <form onSubmit={saveProduct} className="admin-form"><label>Product name<input value={name} onChange={e => setName(e.target.value)} required /></label><div className="form-row"><label>Price (USD)<input type="number" min="0.01" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required /></label><label>Stock<input type="number" min="0" value={stock} onChange={e => setStock(e.target.value)} /></label></div><label>Category<select value={categoryId} onChange={e => setCategoryId(e.target.value)}><option value="">No category</option>{categories.map(c => <option value={c.id} key={c.id}>{c.name}</option>)}</select></label><label>Description<textarea value={description} onChange={e => setDescription(e.target.value)} /></label><label>Product image<input id="product-image" type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] ?? null)} /></label><button className="button dark" disabled={saving}>{saving ? 'Saving...' : editingId ? 'Update product' : 'Add product'}</button>{status && <p className="admin-status" role="alert">{status}</p>}</form>
     </section>
-
-    <section className="admin-panel"><div className="panel-heading"><div><p className="eyebrow">PRODUCTS</p><h2>Manage catalog</h2></div></div><div className="admin-table">{products.map(p => <div className="admin-row" key={p.id}><div className="row-product">{p.main_image_url ? <img src={p.main_image_url} alt="" /> : <span>M</span>}<div><strong>{p.name}</strong><small>${Number(p.price).toFixed(2)} USD · {p.stock_quantity} in stock</small></div></div><div className="row-actions"><button onClick={() => editProduct(p)}>Edit</button><button onClick={() => deleteProduct(p.id)}>Delete</button></div></div>)}{!products.length && <p className="admin-note">No products yet.</p>}</div></section>
-
+    <section className="admin-panel"><div className="panel-heading"><div><p className="eyebrow">PRODUCTS</p><h2>Manage catalog</h2></div></div><div className="admin-table">{products.map(p => <div className="admin-row" key={p.id}><div className="row-product">{p.main_image_url ? <img src={p.main_image_url} alt="" /> : <span>M</span>}<div><strong>{p.name}</strong><small>${Number(p.price).toFixed(2)} USD · {p.stock_quantity} in stock</small></div></div><div className="row-actions"><button type="button" onClick={() => editProduct(p)}>Edit</button><button type="button" onClick={() => deleteProduct(p.id)}>Delete</button></div></div>)}{!products.length && <p className="admin-note">No products yet.</p>}</div></section>
     <section className="admin-panel"><div className="panel-heading"><div><p className="eyebrow">ORDERS</p><h2>Recent orders</h2></div></div><div className="admin-table">{orders.map(o => <div className="admin-row" key={o.id}><div><strong>#{o.id.slice(0, 8)}</strong><small>{new Date(o.created_at).toLocaleString()} · ${Number(o.total).toFixed(2)} USD</small></div><select value={o.status} onChange={e => changeOrderStatus(o.id, e.target.value)}>{['pending','paid','processing','shipped','delivered','cancelled','refunded'].map(s => <option key={s}>{s}</option>)}</select></div>)}{!orders.length && <p className="admin-note">No orders yet.</p>}</div></section>
   </div></main>;
 }
