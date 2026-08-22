@@ -31,27 +31,25 @@ const categoryProducts: Record<string, string[]> = {
   'Computers & Accessories': ['USB-C Laptop Dock', 'Wireless Computer Mouse', 'Mechanical Keyboard', 'Laptop Cooling Stand', 'Adjustable Monitor Stand', 'USB Hub Adapter'],
   'Phones & Tablets': ['Android Smartphone', '10.1-Inch Android Tablet', 'Fast Charging Power Bank', 'Universal Tablet Stand', 'Smartphone Camera Lens Kit', 'Wireless Phone Controller'],
   'Audio & Headphones': ['Wireless Bluetooth Headphones', 'Noise Cancelling Earbuds', 'Portable Bluetooth Speaker', 'Wireless Gaming Headset', 'Over-Ear Studio Headphones', 'USB Condenser Microphone'],
-  'Furniture': ['Modern Office Chair', 'Adjustable Computer Desk', 'Modern Storage Cabinet', 'Living Room Side Table', 'Wooden Bookshelf', 'Modern TV Stand'],
+  Furniture: ['Modern Office Chair', 'Adjustable Computer Desk', 'Modern Storage Cabinet', 'Living Room Side Table', 'Wooden Bookshelf', 'Modern TV Stand'],
   'Pet Supplies': ['Comfort Pet Bed', 'Stainless Steel Pet Bowl', 'Adjustable Pet Leash', 'Pet Grooming Kit', 'Portable Pet Carrier', 'Interactive Pet Toy'],
   'Garden & Outdoor': ['Heavy Duty Garden Hose', 'Adjustable Garden Sprinkler', 'Outdoor Storage Box', 'Garden Hand Tool Set', 'Plant Growing Pot Set', 'Outdoor Folding Chair'],
   'Outdoor & Camping': ['Portable Camping Tent', 'Lightweight Sleeping Bag', 'Rechargeable Camping Lantern', 'Folding Camp Chair', 'Portable Camping Stove', 'Hiking Backpack'],
   'Tools & Hardware': ['Professional Hand Tool Set', 'Cordless Power Drill', 'Adjustable Wrench Set', 'Heavy Duty Screwdriver Set', 'Portable Tool Organizer', 'Precision Tool Kit'],
-  'Lighting': ['Modern Table Lamp', 'Adjustable Floor Lamp', 'LED Ceiling Light', 'Rechargeable Desk Lamp', 'Decorative Wall Light', 'Smart LED Light Strip'],
-  'Kitchenware': ['Stainless Steel Knife Set', 'Non-Stick Cooking Utensil Set', 'Glass Food Storage Set', 'Bamboo Cutting Board', 'Kitchen Measuring Set', 'Stainless Steel Mixing Bowl Set'],
+  Lighting: ['Modern Table Lamp', 'Adjustable Floor Lamp', 'LED Ceiling Light', 'Rechargeable Desk Lamp', 'Decorative Wall Light', 'Smart LED Light Strip'],
+  Kitchenware: ['Stainless Steel Knife Set', 'Non-Stick Cooking Utensil Set', 'Glass Food Storage Set', 'Bamboo Cutting Board', 'Kitchen Measuring Set', 'Stainless Steel Mixing Bowl Set'],
   'Baby Products': ['Comfort Baby Stroller', 'Adjustable Baby Carrier', 'Baby Feeding Set', 'Portable Changing Mat', 'Soft Baby Blanket', 'Baby Monitor'],
   'Kids & Baby': ['Educational Building Set', 'Kids Learning Puzzle', 'Creative Art Kit', 'Interactive Learning Toy', 'Children’s Board Game', 'Kids Science Kit'],
   'Jewelry & Watches': ['Classic Stainless Steel Watch', 'Minimalist Bracelet', 'Elegant Pendant Necklace', 'Fashion Earrings Set', 'Classic Leather Watch', 'Jewelry Storage Box'],
   'Perfumes & Fragrances': ['Eau de Parfum', 'Long-Lasting Fragrance Mist', 'Classic Eau de Toilette', 'Unisex Signature Fragrance', 'Luxury Fragrance Gift Set', 'Travel Perfume Atomizer'],
 };
 
-const categoryInitial = (category: string) => category.trim().charAt(0).toUpperCase() || 'M';
-
 function displayName(product: Product, category: string) {
   if (!product.name.match(/\b(Collection|Series|Kit|Set|Edition|System|Range|Solution|Package)\b/i)) return product.name;
   const options = categoryProducts[category];
   if (!options?.length) return product.name;
   const seed = product.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return `${options[seed % options.length]} — ${product.sku?.replace(/^MC-?/i, '') || 'MC'}`;
+  return `${options[seed % options.length]} — ${product.id.slice(0, 4).toUpperCase()}`;
 }
 
 function fallbackImage(category: string) {
@@ -74,23 +72,13 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         return (
           <article className="product-card" key={product.id}>
             <Link href={`/shop/${product.slug}`} className="product-card-link" aria-label={`View ${name}`}>
-              <div className="product-image">
-                <img src={image} alt={name} loading="lazy" />
-              </div>
+              <div className="product-image"><img src={image} alt={name} loading="lazy" /></div>
               <div className="product-meta"><span>{safeCategory}</span><strong>{product.stock_quantity > 0 ? 'In stock' : 'Out of stock'}</strong></div>
               <h2>{name}</h2>
               <p>${Number(product.price).toFixed(2)} {product.currency}</p>
             </Link>
             <div className="product-grid-actions">
-              <AddToCartButton
-                productId={product.id}
-                name={name}
-                slug={product.slug}
-                price={Number(product.price)}
-                currency={product.currency}
-                imageUrl={image}
-                stockQuantity={product.stock_quantity}
-              />
+              <AddToCartButton productId={product.id} name={name} slug={product.slug} price={Number(product.price)} currency={product.currency} imageUrl={image} stockQuantity={product.stock_quantity} />
             </div>
           </article>
         );
