@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { addToCart } from '@/lib/cart';
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function AddToCartButton({ productId, name, slug, price, currency, imageUrl, stockQuantity }: Props) {
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const max = Math.max(1, stockQuantity);
@@ -21,7 +23,7 @@ export default function AddToCartButton({ productId, name, slug, price, currency
   function add() {
     addToCart({ productId, name, slug, price, currency, imageUrl }, quantity);
     setAdded(true);
-    window.setTimeout(() => setAdded(false), 1800);
+    window.setTimeout(() => router.push('/cart'), 250);
   }
 
   if (stockQuantity <= 0) return <button className="button dark" disabled>Out of stock</button>;
