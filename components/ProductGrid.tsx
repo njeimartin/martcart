@@ -98,9 +98,12 @@ function productHash(id: string) {
 
 function fallbackImage(category: string, name: string, id: string) {
   const query = encodeURIComponent(imageSearchTerm(category, name));
-  // Use a deterministic lock so different products receive different category-relevant photos.
-  const lock = productHash(id) % 100000;
-  return `https://loremflickr.com/800/800/${query}?lock=${lock}`;
+  // MC products deliberately ignore their database main_image_url.
+  // The unique lock plus cache-busting version prevents one cached photo from
+  // being reused across the catalog while keeping the image category-specific.
+  const lock = productHash(id) % 1000000;
+  const version = productHash(`${id}:${name}`) % 1000000;
+  return `https://loremflickr.com/800/800/${query}?lock=${lock}&v=${version}`;
 }
 
 export default function ProductGrid({ products }: { products: Product[] }) {
