@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { addToCart } from '@/lib/cart';
 
 type Props = {
@@ -14,6 +15,8 @@ type Props = {
 };
 
 export default function AddToCartButton({ productId, name, slug, price, currency, imageUrl, stockQuantity }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const max = Math.max(1, stockQuantity);
@@ -21,6 +24,13 @@ export default function AddToCartButton({ productId, name, slug, price, currency
   function add() {
     addToCart({ productId, name, slug, price, currency, imageUrl }, quantity);
     setAdded(true);
+
+    const returnTo = searchParams.get('returnTo');
+    if (returnTo === '/cart') {
+      window.setTimeout(() => router.push('/cart'), 250);
+      return;
+    }
+
     window.setTimeout(() => setAdded(false), 1800);
   }
 
