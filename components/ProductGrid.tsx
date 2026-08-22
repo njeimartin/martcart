@@ -57,53 +57,14 @@ function displayName(product: Product, category: string) {
   return `${options[seed % options.length]} — ${product.id.slice(0, 4).toUpperCase()}`;
 }
 
-function imageSearchTerm(category: string, name: string) {
-  const terms: Record<string, string> = {
-    Electronics: 'consumer electronics product',
-    'Home & Kitchen': 'kitchen appliance product',
-    Fashion: 'fashion clothing product',
-    'Men’s Fashion': 'mens fashion clothing',
-    "Men's Fashion": 'mens fashion clothing',
-    'Women’s Fashion': 'womens fashion clothing',
-    "Women's Fashion": 'womens fashion clothing',
-    Gaming: 'gaming accessories product',
-    Automotive: 'car accessories product',
-    'Sports & Fitness': 'fitness equipment product',
-    Skincare: 'skincare cosmetics product',
-    Shoes: 'shoes footwear product',
-    Books: 'books product',
-    'Beauty & Personal Care': 'beauty personal care product',
-    'Cameras & Photography': 'camera photography equipment',
-    'Computers & Accessories': 'computer accessories product',
-    'Phones & Tablets': 'smartphone tablet product',
-    'Audio & Headphones': 'headphones audio product',
-    Furniture: 'modern furniture product',
-    'Pet Supplies': 'pet supplies product',
-    'Garden & Outdoor': 'garden outdoor product',
-    'Outdoor & Camping': 'camping outdoor gear',
-    'Tools & Hardware': 'hand tools hardware product',
-    Lighting: 'modern lighting product',
-    Kitchenware: 'kitchen utensils product',
-    'Baby Products': 'baby products',
-    'Kids & Baby': 'kids toys learning products',
-    'Jewelry & Watches': 'jewelry watches product',
-    'Perfumes & Fragrances': 'perfume fragrance product',
-  };
-  return terms[category] ?? `${category} product ${name}`;
-}
-
 function productHash(id: string) {
   return id.split('').reduce((hash, char) => ((hash * 31) + char.charCodeAt(0)) >>> 0, 7);
 }
 
 function fallbackImage(category: string, name: string, id: string) {
-  const query = encodeURIComponent(imageSearchTerm(category, name));
-  // MC products deliberately ignore their database main_image_url.
-  // The unique lock plus cache-busting version prevents one cached photo from
-  // being reused across the catalog while keeping the image category-specific.
-  const lock = productHash(id) % 1000000;
-  const version = productHash(`${id}:${name}`) % 1000000;
-  return `https://loremflickr.com/800/800/${query}?lock=${lock}&v=${version}`;
+  const hash = productHash(id);
+  const seed = `martcart-${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${hash}`;
+  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/800`;
 }
 
 export default function ProductGrid({ products }: { products: Product[] }) {
