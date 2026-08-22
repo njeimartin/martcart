@@ -20,9 +20,9 @@ const categoryProducts: Record<string, string[]> = {
   'Home & Kitchen': ['Electric Kitchen Blender', 'Digital Kitchen Scale', 'Stainless Steel Cookware Set', 'Non-Stick Frying Pan', 'Electric Food Chopper', 'Automatic Coffee Maker'],
   Fashion: ['Classic Casual T-Shirt', 'Premium Cotton Shirt', 'Slim Fit Casual Trousers', 'Classic Denim Jacket', 'Modern Casual Hoodie', 'Everyday Polo Shirt'],
   'Men’s Fashion': ["Men's Casual Polo Shirt", "Men's Slim Fit Jeans", "Men's Casual Sneakers", "Men's Leather Belt", "Men's Formal Shirt", "Men's Casual Jacket"],
-  'Men\'s Fashion': ["Men's Casual Polo Shirt", "Men's Slim Fit Jeans", "Men's Casual Sneakers", "Men's Leather Belt", "Men's Formal Shirt", "Men's Casual Jacket"],
+  "Men's Fashion": ["Men's Casual Polo Shirt", "Men's Slim Fit Jeans", "Men's Casual Sneakers", "Men's Leather Belt", "Men's Formal Shirt", "Men's Casual Jacket"],
   'Women’s Fashion': ["Women's Casual Dress", "Women's High Waist Jeans", "Women's Casual Blouse", "Women's Summer Dress", "Women's Fashion Handbag", "Women's Casual Sneakers"],
-  'Women\'s Fashion': ["Women's Casual Dress", "Women's High Waist Jeans", "Women's Casual Blouse", "Women's Summer Dress", "Women's Fashion Handbag", "Women's Casual Sneakers"],
+  "Women's Fashion": ["Women's Casual Dress", "Women's High Waist Jeans", "Women's Casual Blouse", "Women's Summer Dress", "Women's Fashion Handbag", "Women's Casual Sneakers"],
   Gaming: ['Wireless Gaming Controller', 'RGB Gaming Keyboard', 'Gaming Mouse', 'Gaming Headset', 'Large Gaming Mouse Pad', 'USB Gaming Microphone'],
   Automotive: ['Universal Car Phone Holder', 'Portable Tire Inflator', 'Digital Car Tire Gauge', 'Car Cleaning Kit', 'LED Interior Car Lights', 'Car Vacuum Cleaner'],
   'Sports & Fitness': ['Adjustable Dumbbell Set', 'Resistance Training Bands', 'Portable Exercise Mat', 'Digital Fitness Tracker', 'Home Workout Kit', 'Adjustable Jump Rope'],
@@ -57,10 +57,50 @@ function displayName(product: Product, category: string) {
   return `${options[seed % options.length]} — ${product.id.slice(0, 4).toUpperCase()}`;
 }
 
+function imageSearchTerm(category: string, name: string) {
+  const terms: Record<string, string> = {
+    Electronics: 'consumer electronics product',
+    'Home & Kitchen': 'kitchen appliance product',
+    Fashion: 'fashion clothing product',
+    'Men’s Fashion': 'mens fashion clothing',
+    "Men's Fashion": 'mens fashion clothing',
+    'Women’s Fashion': 'womens fashion clothing',
+    "Women's Fashion": 'womens fashion clothing',
+    Gaming: 'gaming accessories product',
+    Automotive: 'car accessories product',
+    'Sports & Fitness': 'fitness equipment product',
+    Skincare: 'skincare cosmetics product',
+    Shoes: 'shoes footwear product',
+    Books: 'books product',
+    'Beauty & Personal Care': 'beauty personal care product',
+    'Cameras & Photography': 'camera photography equipment',
+    'Computers & Accessories': 'computer accessories product',
+    'Phones & Tablets': 'smartphone tablet product',
+    'Audio & Headphones': 'headphones audio product',
+    Furniture: 'modern furniture product',
+    'Pet Supplies': 'pet supplies product',
+    'Garden & Outdoor': 'garden outdoor product',
+    'Outdoor & Camping': 'camping outdoor gear',
+    'Tools & Hardware': 'hand tools hardware product',
+    Lighting: 'modern lighting product',
+    Kitchenware: 'kitchen utensils product',
+    'Baby Products': 'baby products',
+    'Kids & Baby': 'kids toys learning products',
+    'Jewelry & Watches': 'jewelry watches product',
+    'Perfumes & Fragrances': 'perfume fragrance product',
+  };
+  return terms[category] ?? `${category} product ${name}`;
+}
+
+function productHash(id: string) {
+  return id.split('').reduce((hash, char) => ((hash * 31) + char.charCodeAt(0)) >>> 0, 7);
+}
+
 function fallbackImage(category: string, name: string, id: string) {
-  const label = encodeURIComponent(name || category || 'MARTCART');
-  const seed = encodeURIComponent(id.slice(0, 8));
-  return `https://placehold.co/800x800/f3f4f6/111827?text=${label}%0A${seed}`;
+  const query = encodeURIComponent(imageSearchTerm(category, name));
+  // Use a deterministic lock so different products receive different category-relevant photos.
+  const lock = productHash(id) % 100000;
+  return `https://loremflickr.com/800/800/${query}?lock=${lock}`;
 }
 
 export default function ProductGrid({ products }: { products: Product[] }) {
@@ -74,8 +114,6 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         const category = Array.isArray(product.categories) ? product.categories[0]?.name : product.categories?.name;
         const safeCategory = category ?? 'MARTCART';
         const name = displayName(product, safeCategory);
-        // Generated MC products currently share placeholder imagery in Supabase.
-        // Give them a deterministic, product-specific image instead of showing the same unrelated image.
         const isGeneratedProduct = product.sku?.startsWith('MC-') ?? false;
         const image = isGeneratedProduct
           ? fallbackImage(safeCategory, name, product.id)
