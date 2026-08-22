@@ -7,6 +7,7 @@ type Product = {
   id: string;
   name: string;
   slug: string;
+  sku?: string | null;
   price: number;
   currency: string;
   main_image_url: string | null;
@@ -19,7 +20,9 @@ const categoryProducts: Record<string, string[]> = {
   'Home & Kitchen': ['Electric Kitchen Blender', 'Digital Kitchen Scale', 'Stainless Steel Cookware Set', 'Non-Stick Frying Pan', 'Electric Food Chopper', 'Automatic Coffee Maker'],
   Fashion: ['Classic Casual T-Shirt', 'Premium Cotton Shirt', 'Slim Fit Casual Trousers', 'Classic Denim Jacket', 'Modern Casual Hoodie', 'Everyday Polo Shirt'],
   'Men’s Fashion': ["Men's Casual Polo Shirt", "Men's Slim Fit Jeans", "Men's Casual Sneakers", "Men's Leather Belt", "Men's Formal Shirt", "Men's Casual Jacket"],
+  'Men\'s Fashion': ["Men's Casual Polo Shirt", "Men's Slim Fit Jeans", "Men's Casual Sneakers", "Men's Leather Belt", "Men's Formal Shirt", "Men's Casual Jacket"],
   'Women’s Fashion': ["Women's Casual Dress", "Women's High Waist Jeans", "Women's Casual Blouse", "Women's Summer Dress", "Women's Fashion Handbag", "Women's Casual Sneakers"],
+  'Women\'s Fashion': ["Women's Casual Dress", "Women's High Waist Jeans", "Women's Casual Blouse", "Women's Summer Dress", "Women's Fashion Handbag", "Women's Casual Sneakers"],
   Gaming: ['Wireless Gaming Controller', 'RGB Gaming Keyboard', 'Gaming Mouse', 'Gaming Headset', 'Large Gaming Mouse Pad', 'USB Gaming Microphone'],
   Automotive: ['Universal Car Phone Holder', 'Portable Tire Inflator', 'Digital Car Tire Gauge', 'Car Cleaning Kit', 'LED Interior Car Lights', 'Car Vacuum Cleaner'],
   'Sports & Fitness': ['Adjustable Dumbbell Set', 'Resistance Training Bands', 'Portable Exercise Mat', 'Digital Fitness Tracker', 'Home Workout Kit', 'Adjustable Jump Rope'],
@@ -44,17 +47,20 @@ const categoryProducts: Record<string, string[]> = {
   'Perfumes & Fragrances': ['Eau de Parfum', 'Long-Lasting Fragrance Mist', 'Classic Eau de Toilette', 'Unisex Signature Fragrance', 'Luxury Fragrance Gift Set', 'Travel Perfume Atomizer'],
 };
 
+const generatedNamePattern = /\b(Collection|Series|Kit|Set|Edition|System|Range|Solution|Package)\b/i;
+
 function displayName(product: Product, category: string) {
-  if (!product.name.match(/\b(Collection|Series|Kit|Set|Edition|System|Range|Solution|Package)\b/i)) return product.name;
+  if (!generatedNamePattern.test(product.name)) return product.name;
   const options = categoryProducts[category];
   if (!options?.length) return product.name;
   const seed = product.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
   return `${options[seed % options.length]} — ${product.id.slice(0, 4).toUpperCase()}`;
 }
 
-function fallbackImage(category: string) {
-  const label = encodeURIComponent(category || 'MARTCART');
-  return `https://placehold.co/800x800/f3f4f6/111827?text=${label}`;
+function fallbackImage(category: string, name: string, id: string) {
+  const label = encodeURIComponent(name || category || 'MARTCART');
+  const seed = encodeURIComponent(id.slice(0, 8));
+  return `https://placehold.co/800x800/f3f4f6/111827?text=${label}%0A${seed}`;
 }
 
 export default function ProductGrid({ products }: { products: Product[] }) {
@@ -68,7 +74,13 @@ export default function ProductGrid({ products }: { products: Product[] }) {
         const category = Array.isArray(product.categories) ? product.categories[0]?.name : product.categories?.name;
         const safeCategory = category ?? 'MARTCART';
         const name = displayName(product, safeCategory);
-        const image = product.main_image_url || fallbackImage(safeCategory);
+        // Generated MC products currently share placeholder imagery in Supabase.
+        // Give them a deterministic, product-specific image instead of showing the same unrelated image.
+        const isGeneratedProduct = product.sku?.startsWith('MC-') ?? false;
+        const image = isGeneratedProduct
+          ? fallbackImage(safeCategory, name, product.id)
+          : (product.main_image_url || fallbackImage(safeCategory, name, product.id));
+
         return (
           <article className="product-card" key={product.id}>
             <Link href={`/shop/${product.slug}`} className="product-card-link" aria-label={`View ${name}`}>
