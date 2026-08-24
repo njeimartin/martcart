@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { addToCart } from '@/lib/cart';
 
 type Props = {
@@ -15,16 +14,13 @@ type Props = {
 };
 
 export default function AddToCartButton({ productId, name, slug, price, currency, imageUrl, stockQuantity }: Props) {
-  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
-  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
   const max = Math.max(1, stockQuantity);
 
   function add() {
-    if (adding) return;
-    setAdding(true);
     addToCart({ productId, name, slug, price, currency, imageUrl }, quantity);
-    router.push('/checkout');
+    setAdded(true);
   }
 
   if (stockQuantity <= 0) return <button className="button dark" disabled>Out of stock</button>;
@@ -32,13 +28,14 @@ export default function AddToCartButton({ productId, name, slug, price, currency
   return (
     <div className="cart-actions">
       <div className="quantity-control" aria-label="Quantity">
-        <button type="button" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+        <button type="button" aria-label="Decrease quantity" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
         <span>{quantity}</span>
-        <button type="button" onClick={() => setQuantity(Math.min(max, quantity + 1))}>+</button>
+        <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(Math.min(max, quantity + 1))}>+</button>
       </div>
-      <button type="button" className="button dark" onClick={add} disabled={adding}>
-        {adding ? 'Opening checkout…' : 'Add to cart'}
+      <button type="button" className="button dark" onClick={add}>
+        {added ? '✓ Added to cart' : 'Add to cart'}
       </button>
+      {added && <a className="button" href="/checkout">Checkout</a>}
     </div>
   );
 }
