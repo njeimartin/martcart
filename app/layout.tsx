@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./triggers.css";
 
 export const metadata: Metadata = {
-  title: "MARTCART — Shop Smart. Live Better.",
-  description: "A modern marketplace for electronics, fashion, home, beauty, watches and travel products.",
+  title: "Triggers Nation — Built for Performance.",
+  description: "Tactical gear, military equipment and outdoor essentials for serious customers.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
