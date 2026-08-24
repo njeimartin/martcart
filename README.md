@@ -1,33 +1,27 @@
-# MARTCART
+# TRIGGERS NATION
 
-MARTCART is a Next.js 16 marketplace with Supabase authentication/data and Stripe Checkout.
+Triggers Nation is a premium tactical gear and outdoor essentials storefront built with Next.js, Supabase, and secure checkout infrastructure.
 
 ## Stack
 
 - Next.js 16 / React 19
 - Supabase (`@supabase/ssr` + `supabase-js`)
-- Stripe Checkout + webhooks
+- Secure checkout infrastructure
 - TypeScript / ESLint
+
+## Brand
+
+**TRIGGERS NATION** — Built for Performance.
+
+The storefront uses a dark tactical visual system with gold accents and focuses on tactical gear, military equipment, outdoor essentials, apparel, and accessories.
 
 ## Environment
 
-Set these in Vercel for Production, Preview, and Development as appropriate:
-
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (server-only)
-- `STRIPE_SECRET_KEY` (server-only)
-- `STRIPE_WEBHOOK_SECRET` (server-only)
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-- `NEXT_PUBLIC_SITE_URL`
-
-`NEXT_PUBLIC_SUPABASE_ANON_KEY` is supported as a legacy fallback but should not be required for new deployments.
+Set the required Supabase and checkout environment variables in Vercel for Production, Preview, and Development as appropriate.
 
 ## Supabase setup
 
 Run `supabase/schema.sql` in the Supabase SQL Editor. It creates the catalog, profiles, orders, order items, wishlists, storage bucket, indexes, and RLS policies used by the application.
-
-After creating an admin account, set its profile role to `admin` in `public.profiles` before using `/admin`.
 
 ## Local development
 
@@ -43,4 +37,4 @@ npm run lint
 npm run build
 ```
 
-The GitHub Actions workflow runs both checks on pushes and pull requests to `main`.
+The storefront homepage, catalog, product pages, cart, and checkout are retained as the commerce foundation while the customer-facing identity is now Triggers Nation.
