@@ -3,100 +3,21 @@
 import Link from 'next/link';
 import AddToCartButton from '@/components/AddToCartButton';
 
-type Product = {
-  id: string;
-  name: string;
-  slug: string;
-  sku?: string | null;
-  price: number;
-  currency: string;
-  main_image_url: string | null;
-  stock_quantity: number;
-  categories: { name: string } | { name: string }[] | null;
-};
+type Product = { id:string; name:string; slug:string; sku?:string|null; price:number; currency:string; main_image_url:string|null; stock_quantity:number; categories:{name:string}|{name:string}[]|null };
 
-const categoryProducts: Record<string, string[]> = {
-  Electronics: ['USB-C Fast Charger', 'Wireless Bluetooth Speaker', 'Portable Power Station', 'Smart LED Display', 'Wireless Charging Station', 'Digital Alarm Clock'],
-  'Home & Kitchen': ['Electric Kitchen Blender', 'Digital Kitchen Scale', 'Stainless Steel Cookware Set', 'Non-Stick Frying Pan', 'Electric Food Chopper', 'Automatic Coffee Maker'],
-  Fashion: ['Classic Casual T-Shirt', 'Premium Cotton Shirt', 'Slim Fit Casual Trousers', 'Classic Denim Jacket', 'Modern Casual Hoodie', 'Everyday Polo Shirt'],
-  'Men’s Fashion': ["Men's Casual Polo Shirt", "Men's Slim Fit Jeans", "Men's Casual Sneakers", "Men's Leather Belt", "Men's Formal Shirt", "Men's Casual Jacket"],
-  "Men's Fashion": ["Men's Casual Polo Shirt", "Men's Slim Fit Jeans", "Men's Casual Sneakers", "Men's Leather Belt", "Men's Formal Shirt", "Men's Casual Jacket"],
-  'Women’s Fashion': ["Women's Casual Dress", "Women's High Waist Jeans", "Women's Casual Blouse", "Women's Summer Dress", "Women's Fashion Handbag", "Women's Casual Sneakers"],
-  "Women's Fashion": ["Women's Casual Dress", "Women's High Waist Jeans", "Women's Casual Blouse", "Women's Summer Dress", "Women's Fashion Handbag", "Women's Casual Sneakers"],
-  Gaming: ['Wireless Gaming Controller', 'RGB Gaming Keyboard', 'Gaming Mouse', 'Gaming Headset', 'Large Gaming Mouse Pad', 'USB Gaming Microphone'],
-  Automotive: ['Universal Car Phone Holder', 'Portable Tire Inflator', 'Digital Car Tire Gauge', 'Car Cleaning Kit', 'LED Interior Car Lights', 'Car Vacuum Cleaner'],
-  'Sports & Fitness': ['Adjustable Dumbbell Set', 'Resistance Training Bands', 'Portable Exercise Mat', 'Digital Fitness Tracker', 'Home Workout Kit', 'Adjustable Jump Rope'],
-  Skincare: ['Hydrating Facial Moisturizer', 'Daily Facial Cleanser', 'Vitamin C Face Serum', 'Gentle Facial Toner', 'Daily Sunscreen Lotion', 'Deep Cleansing Face Mask'],
-  Shoes: ['Classic Casual Sneakers', 'Running Sports Shoes', 'Lightweight Walking Shoes', 'Classic Leather Shoes', 'Outdoor Hiking Shoes', 'Everyday Slip-On Shoes'],
-  Books: ['Business & Entrepreneurship Guide', 'Personal Finance Handbook', 'Technology Beginner Guide', 'Modern Cooking Recipe Book', 'Self Improvement Workbook', 'Creative Writing Guide'],
-  'Beauty & Personal Care': ['Personal Care Grooming Kit', 'Electric Facial Cleansing Brush', 'Portable Hair Dryer', 'Rechargeable Hair Trimmer', 'Beauty Makeup Organizer', 'Beauty Care Gift Set'],
-  'Cameras & Photography': ['Mirrorless Digital Camera', 'Portable Action Camera', 'Adjustable Camera Tripod', 'Camera Carrying Bag', 'LED Photography Light', 'Universal Camera Strap'],
-  'Computers & Accessories': ['USB-C Laptop Dock', 'Wireless Computer Mouse', 'Mechanical Keyboard', 'Laptop Cooling Stand', 'Adjustable Monitor Stand', 'USB Hub Adapter'],
-  'Phones & Tablets': ['Android Smartphone', '10.1-Inch Android Tablet', 'Fast Charging Power Bank', 'Universal Tablet Stand', 'Smartphone Camera Lens Kit', 'Wireless Phone Controller'],
-  'Audio & Headphones': ['Wireless Bluetooth Headphones', 'Noise Cancelling Earbuds', 'Portable Bluetooth Speaker', 'Wireless Gaming Headset', 'Over-Ear Studio Headphones', 'USB Condenser Microphone'],
-  Furniture: ['Modern Office Chair', 'Adjustable Computer Desk', 'Modern Storage Cabinet', 'Living Room Side Table', 'Wooden Bookshelf', 'Modern TV Stand'],
-  'Pet Supplies': ['Comfort Pet Bed', 'Stainless Steel Pet Bowl', 'Adjustable Pet Leash', 'Pet Grooming Kit', 'Portable Pet Carrier', 'Interactive Pet Toy'],
-  'Garden & Outdoor': ['Heavy Duty Garden Hose', 'Adjustable Garden Sprinkler', 'Outdoor Storage Box', 'Garden Hand Tool Set', 'Plant Growing Pot Set', 'Outdoor Folding Chair'],
-  'Outdoor & Camping': ['Portable Camping Tent', 'Lightweight Sleeping Bag', 'Rechargeable Camping Lantern', 'Folding Camp Chair', 'Portable Camping Stove', 'Hiking Backpack'],
-  'Tools & Hardware': ['Professional Hand Tool Set', 'Cordless Power Drill', 'Adjustable Wrench Set', 'Heavy Duty Screwdriver Set', 'Portable Tool Organizer', 'Precision Tool Kit'],
-  Lighting: ['Modern Table Lamp', 'Adjustable Floor Lamp', 'LED Ceiling Light', 'Rechargeable Desk Lamp', 'Decorative Wall Light', 'Smart LED Light Strip'],
-  Kitchenware: ['Stainless Steel Knife Set', 'Non-Stick Cooking Utensil Set', 'Glass Food Storage Set', 'Bamboo Cutting Board', 'Kitchen Measuring Set', 'Stainless Steel Mixing Bowl Set'],
-  'Baby Products': ['Comfort Baby Stroller', 'Adjustable Baby Carrier', 'Baby Feeding Set', 'Portable Changing Mat', 'Soft Baby Blanket', 'Baby Monitor'],
-  'Kids & Baby': ['Educational Building Set', 'Kids Learning Puzzle', 'Creative Art Kit', 'Interactive Learning Toy', 'Children’s Board Game', 'Kids Science Kit'],
-  'Jewelry & Watches': ['Classic Stainless Steel Watch', 'Minimalist Bracelet', 'Elegant Pendant Necklace', 'Fashion Earrings Set', 'Classic Leather Watch', 'Jewelry Storage Box'],
-  'Perfumes & Fragrances': ['Eau de Parfum', 'Long-Lasting Fragrance Mist', 'Classic Eau de Toilette', 'Unisex Signature Fragrance', 'Luxury Fragrance Gift Set', 'Travel Perfume Atomizer'],
-};
+const tacticalNames = ['Tactical Assault Backpack 40L','Combat Boots – Stealth Force','Tactical Flashlight Pro 2000LM','Plate Carrier Vest – Level III','Tactical Gloves','Rifle Sling','Tactical Belt','Tactical Pants','First Aid Kit','Hydration Pack','Tactical Helmet','Mission Backpack','Tactical Field Jacket','Utility Knife','Tactical Field Watch','Utility Pouch'];
+const tacticalImages = [
+  'https://images.prom.ua/6565579821_w640_h640_armejskij-ryukzak-skladnoj.jpg',
+  'https://qapmodatatica.com.br/cdn/shop/files/molde_Combat_Shirt_5_3ad179c4-978a-460b-a443-0ac3d2cf4e41.png?v=1774035131',
+  'https://us03-imgcdn.ymcart.com/51329/2022/09/06/d/f/df2e057e089eb32e.jpg',
+  'https://cdn.shopify.com/s/files/1/0065/4196/7430/files/Untitled_design_30_1024x1024.png?v=1713196010'
+];
 
-const generatedNamePattern = /\b(Collection|Series|Kit|Set|Edition|System|Range|Solution|Package)\b/i;
+function hash(id:string){return id.split('').reduce((h,c)=>((h*31)+c.charCodeAt(0))>>>0,11)}
+function category(product:Product){return Array.isArray(product.categories)?product.categories[0]?.name:product.categories?.name}
+function tacticalCategory(product:Product){const source=(category(product)||'').toLowerCase();if(source.includes('outdoor')||source.includes('camp'))return 'Outdoor Essentials';if(source.includes('fashion')||source.includes('apparel'))return 'Tactical Gear';return 'Military Equipment'}
 
-function displayName(product: Product, category: string) {
-  if (!generatedNamePattern.test(product.name)) return product.name;
-  const options = categoryProducts[category];
-  if (!options?.length) return product.name;
-  const seed = product.id.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  return `${options[seed % options.length]} — ${product.id.slice(0, 4).toUpperCase()}`;
-}
-
-function productHash(id: string) {
-  return id.split('').reduce((hash, char) => ((hash * 31) + char.charCodeAt(0)) >>> 0, 7);
-}
-
-function fallbackImage(category: string, name: string, id: string) {
-  const hash = productHash(id);
-  const seed = `martcart-${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${hash}`;
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/800`;
-}
-
-export default function ProductGrid({ products }: { products: Product[] }) {
-  if (!products.length) {
-    return <div className="container empty-products"><h2>No products yet</h2><p>Add products in Supabase and they will appear here automatically.</p></div>;
-  }
-
-  return (
-    <div className="container product-grid">
-      {products.map((product) => {
-        const category = Array.isArray(product.categories) ? product.categories[0]?.name : product.categories?.name;
-        const safeCategory = category ?? 'MARTCART';
-        const name = displayName(product, safeCategory);
-        const isGeneratedProduct = product.sku?.startsWith('MC-') ?? false;
-        const image = isGeneratedProduct
-          ? fallbackImage(safeCategory, name, product.id)
-          : (product.main_image_url || fallbackImage(safeCategory, name, product.id));
-
-        return (
-          <article className="product-card" key={product.id}>
-            <Link href={`/shop/${product.slug}`} className="product-card-link" aria-label={`View ${name}`}>
-              <div className="product-image"><img src={image} alt={name} loading="lazy" /></div>
-              <div className="product-meta"><span>{safeCategory}</span><strong>{product.stock_quantity > 0 ? 'In stock' : 'Out of stock'}</strong></div>
-              <h2>{name}</h2>
-              <p>${Number(product.price).toFixed(2)} {product.currency}</p>
-            </Link>
-            <div className="product-grid-actions">
-              <AddToCartButton productId={product.id} name={name} slug={product.slug} price={Number(product.price)} currency={product.currency} imageUrl={image} stockQuantity={product.stock_quantity} />
-            </div>
-          </article>
-        );
-      })}
-    </div>
-  );
+export default function ProductGrid({products}:{products:Product[]}){
+ if(!products.length)return <div className="trigger-empty"><h2>Mission catalog coming online</h2><p>Products will appear here as the Triggers Nation catalog is connected.</p></div>;
+ return <div className="container product-grid">{products.map((product,index)=>{const image=product.main_image_url||tacticalImages[hash(product.id)%tacticalImages.length];const name=(product.name&&/^(Tactical|Combat|Mission|Utility|First Aid|Hydration)/i.test(product.name))?product.name:tacticalNames[index%tacticalNames.length];const cat=tacticalCategory(product);return <article className="product-card" key={product.id}><Link href={`/shop/${product.slug}`} className="product-card-link" aria-label={`View ${name}`}><div className="product-image"><img src={image} alt={name} loading="lazy" /></div><div className="product-meta"><span>{cat}</span><strong>{product.stock_quantity>0?'In stock':'Out of stock'}</strong></div><h2>{name}</h2><p>${Number(product.price).toFixed(2)} {product.currency}</p></Link><div className="product-grid-actions"><AddToCartButton productId={product.id} name={name} slug={product.slug} price={Number(product.price)} currency={product.currency} imageUrl={image} stockQuantity={product.stock_quantity}/></div></article>})}</div>;
 }
