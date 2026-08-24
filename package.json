@@ -1,6 +1,6 @@
 {
-  "name": "martcart",
-  "version": "0.1.0",
+  "name": "triggers-nation",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
